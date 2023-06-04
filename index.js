@@ -26,7 +26,7 @@ predlojka.on('text', async ctx => {
             await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: `Привет, ${ctx.from.first_name}! Я бот Потэйтоса ✨\n\nЕсли у тебя есть какие-то вопросы, пожелания или предложения - ты можешь описать их здесь 💬\n\nВыберите действие из списка👇🏻`, reply_markup: {inline_keyboard: main_keyboards}})
             return ctx.scene.leave('predlojka')
         }
-        await ctx.reply('Отбработка...', {reply_markup: {remove_keyboard: true}})
+        await ctx.reply('Обработка...', {reply_markup: {remove_keyboard: true}})
         await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {predlmsg: ctx.message.message_id, predmsg: ctx.message.text}})
         await ctx.reply('Вы уверены что хотите отправить вами написанное предложение выше?', {reply_to_message_id: ctx.message.message_id, reply_markup: {inline_keyboard: predloj_keyboards}})
     } catch (e) {
@@ -57,7 +57,7 @@ predlojka.action('predlojsend', async ctx => {
            console.log('ER'); 
         }
         await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {predsend: `${predid}`}})
-        await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: `Привет, ${ctx.from.first_name}! Я бот Потэйтоса ✨\n\nЕсли у тебя есть какие-то вопросы, пожелания или предложения - ты можешь описать их здесь 💬\n\nВыберите действие из списка👇🏻`, reply_markup: {inline_keyboard: main_keyboards}})
+        await ctx.reply('Отправил ✅', {reply_markup: {inline_keyboard: [[Markup.button.callback('⏮ В меню', 'backtomnscenes')]]}})
         await ctx.answerCbQuery('Отправил ✅', {show_alert: false})
         await ctx.scene.leave('predlojka')
     } catch (e) {
@@ -97,8 +97,7 @@ pxtatansw.on('text', async ctx => {
             console.log('');
         }
         await collection.findOneAndUpdate({user_id: db.usertoansw}, {$set: {predsend: 'none'}})
-        await ctx.reply('Отправил ✅')
-        await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: `Привет, ${ctx.from.first_name}! Я бот Потэйтоса ✨\n\nЕсли у тебя есть какие-то вопросы, пожелания или предложения - ты можешь описать их здесь 💬\n\nВыберите действие из списка👇🏻`, reply_markup: {inline_keyboard: main_keyboards}})
+        await ctx.reply('Отправил ✅', {reply_markup: {inline_keyboard: [[Markup.button.callback('⏮ В меню', 'backtomnscenes')]]}})
         await ctx.scene.leave('pxtatansw')
     } catch (e) {
         console.error(e);
@@ -260,17 +259,14 @@ reklam_st4.on('text', async ctx => {
                     arr.push({type: 'document', media: db.reklam_tzfile[i]})
                 }
                 await ctx.tg.sendMediaGroup(1031267639, arr)
-                await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️')
             }else {
                 await ctx.tg.sendDocument(1031267639, db.reklam_tzfile[0], {caption: `🟢 Новая заявка на рекламу:\n\n<b>Платформа:</b> ${db.reklam_type}\n<b>Пользователь:</b> ${db.user_name}\n<b>Cсылка на рекламируемый проект:</b> ${db.reklam_link}\n<b>Описание проекта и ТЗ:</b> <code>${db.reklam_tzmsg}</code>\n<b>Рекламный текст:</b> <code>${db.reklam_alrtext}</code>\n<b>Желаемая дата:</b> <code>${db.reklam_date}</code>`, reply_markup: {inline_keyboard: [[Markup.button.url('Ссылка на профиль пользователя 👤', `https://t.me/${db.user_name.replace('@', '')}`)]]}, parse_mode: 'HTML'})
-                await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️')
             }
         }else {
             await ctx.tg.sendMessage(1031267639, `🟢 Новая заявка на рекламу:\n\n<b>Платформа:</b> ${db.reklam_type}\n<b>Пользователь:</b> ${db.user_name}\n<b>Cсылка на рекламируемый проект:</b> ${db.reklam_link}\n<b>Описание проекта и ТЗ:</b> <code>${db.reklam_tzmsg}</code>\n<b>Рекламный текст:</b> <code>${db.reklam_alrtext}</code>\n<b>Желаемая дата:</b> <code>${db.reklam_date}</code>`, {reply_markup: {inline_keyboard: [[Markup.button.url('Ссылка на профиль пользователя 👤', `https://t.me/${db.user_name.replace('@', '')}`)]]}, parse_mode: 'HTML'})
-            await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️')
         }
         
-        await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: `Привет, ${ctx.from.first_name}! Я бот Потэйтоса ✨\n\nЕсли у тебя есть какие-то вопросы, пожелания или предложения - ты можешь описать их здесь 💬\n\nВыберите действие из списка👇🏻`, reply_markup: {inline_keyboard: main_keyboards}})
+        await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️', {reply_markup: {inline_keyboard: [[Markup.button.callback('⏮ В меню', 'backtomnscenes')]]}})
         await ctx.scene.leave('reklam_st4')
     } catch (e) {
         console.error(e);
@@ -311,17 +307,14 @@ reklam_st5.action('chekusernm', async ctx => {
                     arr.push({type: 'document', media: db.reklam_tzfile[i]})
                 }
                 await ctx.tg.sendMediaGroup(1031267639, arr)
-                await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️')
             }else {
                 await ctx.tg.sendDocument(1031267639, db.reklam_tzfile[0], {caption: `🟢 Новая заявка на рекламу:\n\n<b>Платформа:</b> ${db.reklam_type}\n<b>Пользователь:</b> ${db.user_name}\n<b>Cсылка на рекламируемый проект:</b> ${db.reklam_link}\n<b>Описание проекта и ТЗ:</b> <code>${db.reklam_tzmsg}</code>\n<b>Рекламный текст:</b> <code>${db.reklam_alrtext}</code>\n<b>Желаемая дата:</b> <code>${db.reklam_date}</code>`, reply_markup: {inline_keyboard: [[Markup.button.url('Ссылка на профиль пользователя 👤', `https://t.me/${db.user_name.replace('@', '')}`)]]}, parse_mode: 'HTML'})
-                await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️')
             }
         }else {
             await ctx.tg.sendMessage(1031267639, `🟢 Новая заявка на рекламу:\n\n<b>Платформа:</b> ${db.reklam_type}\n<b>Пользователь:</b> ${db.user_name}\n<b>Cсылка на рекламируемый проект:</b> ${db.reklam_link}\n<b>Описание проекта и ТЗ:</b> <code>${db.reklam_tzmsg}</code>\n<b>Рекламный текст:</b> <code>${db.reklam_alrtext}</code>\n<b>Желаемая дата:</b> <code>${db.reklam_date}</code>`, {reply_markup: {inline_keyboard: [[Markup.button.url('Ссылка на профиль пользователя 👤', `https://t.me/${db.user_name.replace('@', '')}`)]]}, parse_mode: 'HTML'})
-            await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️')
         }
 
-        await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: `Привет, ${ctx.from.first_name}! Я бот Потэйтоса ✨\n\nЕсли у тебя есть какие-то вопросы, пожелания или предложения - ты можешь описать их здесь 💬\n\nВыберите действие из списка👇🏻`, reply_markup: {inline_keyboard: main_keyboards}})
+        await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️', {reply_markup: {inline_keyboard: [[Markup.button.callback('⏮ В меню', 'backtomnscenes')]]}})
         await ctx.scene.leave('reklam_st5')
     } catch (e) {
         console.error(e);
@@ -372,8 +365,7 @@ svedfold_scene.action('ysved', async ctx => {
         await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {user_name: `@${ctx.from.username}`}})
         const dbcommit = await collection.findOne({user_id: ctx.from.id})
         await ctx.tg.sendMessage(1031267639, `🟢 Новая заявка на: <b>${dbcommit.uslug_type}</b>\n\n<b>Пользователь:</b> ${dbcommit.user_name}\n<b>Интересует:</b> ${dbcommit.sved_tz}`, {parse_mode: 'HTML', reply_markup: {inline_keyboard: [[Markup.button.url('Профиль пользователя 👤', `https://t.me/${dbcommit.user_name.replace('@', '')}`)]]}})
-        await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️')
-        await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: `Привет, ${ctx.from.first_name}! Я бот Потэйтоса ✨\n\nЕсли у тебя есть какие-то вопросы, пожелания или предложения - ты можешь описать их здесь 💬\n\nВыберите действие из списка👇🏻`, reply_markup: {inline_keyboard: main_keyboards}})
+        await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️', {reply_markup: {inline_keyboard: [[Markup.button.callback('⏮ В меню', 'backtomnscenes')]]}})
         await ctx.scene.leave('svedfold_scene')
         await ctx.answerCbQuery()
     } catch (e) {
@@ -447,8 +439,7 @@ beatfold_spisscene.action('arendawav', async ctx => {
         await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {lic: 'Аренда Wav', user_name: `@${ctx.from.username}`}})
         const dbcommit = await collection.findOne({user_id: ctx.from.id})
         await ctx.tg.sendMessage(1031267639, `🟢 Новая заявка на: <b>${dbcommit.uslug_type}</b>\n\n<b>Пользователь:</b> ${dbcommit.user_name}\n<b>Название интересующего бита:</b> ${dbcommit.beatfrspis}\n<b>Тип лицензии:</b> ${dbcommit.lic}`, {parse_mode: 'HTML', reply_markup: {inline_keyboard: [[Markup.button.url('Профиль пользователя 👤', `https://t.me/${dbcommit.user_name.replace('@', '')}`)]]}})
-        await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️')
-        await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: `Привет, ${ctx.from.first_name}! Я бот Потэйтоса ✨\n\nЕсли у тебя есть какие-то вопросы, пожелания или предложения - ты можешь описать их здесь 💬\n\nВыберите действие из списка👇🏻`, reply_markup: {inline_keyboard: main_keyboards}})
+        await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️', {reply_markup: {inline_keyboard: [[Markup.button.callback('⏮ В меню', 'backtomnscenes')]]}})
         await ctx.scene.leave('beatfold_spisscene')
     } catch (e) {
         console.error(e);
@@ -471,8 +462,7 @@ beatfold_spisscene.action('wptrackout', async ctx => {
         await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {lic: 'Wav + Trackout', user_name: `@${ctx.from.username}`}})
         const dbcommit = await collection.findOne({user_id: ctx.from.id})
         await ctx.tg.sendMessage(1031267639, `🟢 Новая заявка на: <b>${dbcommit.uslug_type}</b>\n\n<b>Пользователь:</b> ${dbcommit.user_name}\n<b>Название интересующего бита:</b> ${dbcommit.beatfrspis}\n<b>Тип лицензии:</b> ${dbcommit.lic}`, {parse_mode: 'HTML', reply_markup: {inline_keyboard: [[Markup.button.url('Профиль пользователя 👤', `https://t.me/${dbcommit.user_name.replace('@', '')}`)]]}})
-        await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️')
-        await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: `Привет, ${ctx.from.first_name}! Я бот Потэйтоса ✨\n\nЕсли у тебя есть какие-то вопросы, пожелания или предложения - ты можешь описать их здесь 💬\n\nВыберите действие из списка👇🏻`, reply_markup: {inline_keyboard: main_keyboards}})
+        await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️', {reply_markup: {inline_keyboard: [[Markup.button.callback('⏮ В меню', 'backtomnscenes')]]}})
         await ctx.scene.leave('beatfold_spisscene')
     } catch (e) {
         console.error(e);
@@ -495,8 +485,7 @@ beatfold_spisscene.action('exclusive', async ctx => {
         await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {lic: 'Эксклюзивная лицензия', user_name: `@${ctx.from.username}`}})
         const dbcommit = await collection.findOne({user_id: ctx.from.id})
         await ctx.tg.sendMessage(1031267639, `🟢 Новая заявка на: <b>${dbcommit.uslug_type}</b>\n\n<b>Пользователь:</b> ${dbcommit.user_name}\n<b>Название интересующего бита:</b> ${dbcommit.beatfrspis}\n<b>Тип лицензии:</b> ${dbcommit.lic}`, {parse_mode: 'HTML', reply_markup: {inline_keyboard: [[Markup.button.url('Профиль пользователя 👤', `https://t.me/${dbcommit.user_name.replace('@', '')}`)]]}})
-        await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️')
-        await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: `Привет, ${ctx.from.first_name}! Я бот Потэйтоса ✨\n\nЕсли у тебя есть какие-то вопросы, пожелания или предложения - ты можешь описать их здесь 💬\n\nВыберите действие из списка👇🏻`, reply_markup: {inline_keyboard: main_keyboards}})
+        await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️', {reply_markup: {inline_keyboard: [[Markup.button.callback('⏮ В меню', 'backtomnscenes')]]}})
         await ctx.scene.leave('beatfold_spisscene')
     } catch (e) {
         console.error(e);
@@ -617,8 +606,7 @@ beatfold_beatscene_st2.action('sendbeattz', async ctx => {
             ctx.tg.sendMessage(1031267639, `Новая заявка на: ${dbcommit.uslug_type}\n\n<b>Пользователь:</b> ${dbcommit.user_name}\n<b>ID пользователя:</b> <code>${dbcommit.user_id}</code>\n<b>Beat type:</b> <code>${dbcommit.beattype}</code>\n<b>Пожелания к биту:</b> <code>${dbcommit.beatscrtz}</code>`, {parse_mode: 'HTML', reply_markup: {inline_keyboard: [[Markup.button.url('Открыть профиль пользователя 👤', `https://t.me/${dbcommit.user_name.replace('@', '')}`)]]}})
         }
 
-        await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️')
-        await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: `Привет, ${ctx.from.first_name}! Я бот Потэйтоса ✨\n\nЕсли у тебя есть какие-то вопросы, пожелания или предложения - ты можешь описать их здесь 💬\n\nВыберите действие из списка👇🏻`, reply_markup: {inline_keyboard: main_keyboards}})
+        await ctx.reply('Ваша заявка создана ✅\n\nС вами свяжутся в ближайшее время для уточнений заявки ✍️', {reply_markup: {inline_keyboard: [[Markup.button.callback('⏮ В меню', 'backtomnscenes')]]}})
         await ctx.scene.leave('beatfold_beatscene_st2')
     } catch (e) {
         console.error(e);
@@ -1050,6 +1038,16 @@ bot.action('backtobeatsfold', async ctx => {
         if(ctx.scene.current != undefined) return await ctx.answerCbQuery() 
         await ctx.deleteMessage(ctx.callbackQuery.message.message_id)
         await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: '🛠 Выберите услугу:', reply_markup: {inline_keyboard: uslug_beats_keyboards}})
+        await ctx.answerCbQuery()
+    } catch (e) {
+        console.error(e);
+    }
+})
+
+bot.action('backtomnscenes', async ctx => {
+    try {
+        await ctx.deleteMessage(ctx.callbackQuery.message.message_id)
+        await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: 'Я бот Потэйтоса ✨\n\nЕсли у тебя есть какие-то вопросы, пожелания или предложения - ты можешь описать их здесь 💬\n\nВыберите действие из списка👇🏻', reply_markup: {inline_keyboard: main_keyboards}})
         await ctx.answerCbQuery()
     } catch (e) {
         console.error(e);
