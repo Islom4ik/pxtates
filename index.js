@@ -13,6 +13,7 @@ const predlojka = new Scenes.BaseScene("predlojka");
 
 predlojka.enter(async ctx => {
     try {
+        await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {predlojawaitforfiles: false, predmsg: 'null'}})
         return await ctx.reply('🥔 Предложите свою новость, отправить мем, идею для видео, или задайте мне вопрос: ', {reply_markup: {keyboard: [['Отменить 🔴']], resize_keyboard: true}})
     } catch (e) {
         console.error(e);
@@ -21,24 +22,28 @@ predlojka.enter(async ctx => {
 
 predlojka.on('text', async ctx => {
     try {
+        const db = await collection.findOne({user_id: ctx.from.id})
+        if(db.predmsg != 'null') return await ctx.reply('➕ Вы хотите прикрепить файлы?')
         if(ctx.message.text == 'Отменить 🔴') {
             await ctx.reply('Отменено ✅', {reply_markup: {remove_keyboard: true}})
             await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: `Привет, ${ctx.from.first_name}! Я бот Потэйтоса ✨\n\nЕсли у тебя есть какие-то вопросы, пожелания или предложения - ты можешь описать их здесь 💬\n\nВыберите действие из списка👇🏻`, reply_markup: {inline_keyboard: main_keyboards}})
             return ctx.scene.leave('predlojka')
         }
+
         await ctx.reply('Обработка...', {reply_markup: {remove_keyboard: true}})
-        await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {predlmsg: ctx.message.message_id, predmsg: ctx.message.text}})
-        await ctx.reply('Вы уверены что хотите отправить вами написанное предложение выше?', {reply_to_message_id: ctx.message.message_id, reply_markup: {inline_keyboard: predloj_keyboards}})
+        await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {predlmsg: ctx.message.message_id, predmsg: ctx.message.text, predlojfiles: []}})
+        await ctx.reply('Хотите прикрепить файлы?\nВы можете прикрепить один файл ➕', {reply_to_message_id: ctx.message.message_id, reply_markup: {inline_keyboard: [[Markup.button.callback('➕ Добавить', 'predlojaddfile')], [Markup.button.callback('📩 Отправить', 'predlojsend')]]}})
+        // await ctx.reply('Вы уверены что хотите отправить вами написанное предложение выше?', {reply_to_message_id: ctx.message.message_id, reply_markup: {inline_keyboard: predloj_keyboards}})
     } catch (e) {
         console.error(e);
     }
 })
 
-predlojka.action('predlojedit', async ctx => {
+predlojka.action('predlojaddfile', async ctx => {
     try {
         await ctx.deleteMessage(ctx.callbackQuery.message.message_id)
-        await ctx.answerCbQuery('Загружаю...', {show_alert: false})
-        await ctx.scene.enter('predlojka')
+        await ctx.reply('Отправьте файл:')
+        const db = await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {predlojawaitforfiles: true}})
     } catch (e) {
         console.error(e);
     }
@@ -46,32 +51,101 @@ predlojka.action('predlojedit', async ctx => {
 
 predlojka.action('predlojsend', async ctx => {
     try {
-        const prid = await collection.findOne({_id: new ObjectId('646f07782ec51704c9ff90bd')})
-        const predid = prid.predlojids + 1
-        const db = await collection.findOne({user_id: ctx.from.id})
-        await collection.findOneAndUpdate({_id: new ObjectId('646f07782ec51704c9ff90bd')}, {$set: {predlojids: predid}})
-        await ctx.telegram.sendMessage(1031267639, `${predid}# | Новое сообщение с предложки:\n<i>${db.predmsg}</i>`, {reply_markup: {inline_keyboard: predloj_senderinfo}, parse_mode: "HTML"})
-        try {
-            await ctx.deleteMessage(ctx.callbackQuery.message.message_id)
-        } catch (e) {
-           console.log('ER'); 
-        }
-        await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {predsend: `${predid}`}})
-        await ctx.reply('Отправил ✅', {reply_markup: {inline_keyboard: [[Markup.button.callback('⏮ В меню', 'backtomnscenes')]]}})
-        await ctx.answerCbQuery('Отправил ✅', {show_alert: false})
-        await ctx.scene.leave('predlojka')
+        await ctx.deleteMessage(ctx.callbackQuery.message.message_id)
+        await ctx.scene.enter('predlojkasend')
+        await ctx.answerCbQuery('Отправляю...', {show_alert: false})
     } catch (e) {
         console.error(e);
     }
 })
 
-predlojka.action('predlojcancel', async ctx => {
+predlojka.action('predlojcanc', async ctx => {
+    try {
+        await ctx.deleteMessage(ctx.callbackQuery.message.message_id)
+        await ctx.reply('Отменено ✅')
+        await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: `Привет, ${ctx.from.first_name}! Я бот Потэйтоса ✨\n\nЕсли у тебя есть какие-то вопросы, пожелания или предложения - ты можешь описать их здесь 💬\n\nВыберите действие из списка👇🏻`, reply_markup: {inline_keyboard: main_keyboards}})
+        return ctx.scene.leave('predlojka')
+    } catch (e) {
+        console.error(e);
+    }
+})
+
+predlojka.on('photo', async ctx => {
     try {
         const db = await collection.findOne({user_id: ctx.from.id})
-        await ctx.deleteMessage(ctx.callbackQuery.message.message_id)
-        await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: `Привет, ${ctx.from.first_name}! Я бот Потэйтоса ✨\n\nЕсли у тебя есть какие-то вопросы, пожелания или предложения - ты можешь описать их здесь 💬\n\nВыберите действие из списка👇🏻`, reply_markup: {inline_keyboard: main_keyboards}})
-        await ctx.answerCbQuery('Отменено ✅', {show_alert: false})
-        await ctx.scene.leave('predlojka')
+        if(db.predmsg == 'null') return await ctx.reply('⚠️ Введите текст, а позже сможете прикрепить файлы: ')
+        if(db.predlojawaitforfiles == true) {
+            await collection.findOneAndUpdate({user_id: ctx.from.id}, {$push: {predlojfiles: {file_id: ctx.message.photo.pop().file_id, type: 'photo'}}, $set: {predlojawaitforfiles: false}})
+            await ctx.reply('📩 Выберите действие:', {reply_markup: {inline_keyboard: [[Markup.button.callback('📩 Отправить', 'predlojsend')], [Markup.button.callback('🔴 Отменить', 'predlojcanc')]]}})
+        }
+    } catch (e) {
+        console.error(e);
+    }
+})
+
+predlojka.on('audio', async ctx => {
+    try {
+        const db = await collection.findOne({user_id: ctx.from.id})
+        if(db.predmsg == 'null') return await ctx.reply('⚠️ Введите текст, а позже сможете прикрепить файлы: ')
+        if(db.predlojawaitforfiles == true) {
+            await collection.findOneAndUpdate({user_id: ctx.from.id}, {$push: {predlojfiles: {file_id: ctx.message.audio.file_id, type: 'audio'}}, $set: {predlojawaitforfiles: false}})
+            await ctx.reply('📩 Выберите действие:', {reply_markup: {inline_keyboard: [[Markup.button.callback('📩 Отправить', 'predlojsend')], [Markup.button.callback('🔴 Отменить', 'predlojcanc')]]}})
+        }
+    } catch (e) {
+        console.error(e);
+    }
+})
+
+predlojka.on('document', async ctx => {
+    try {
+        const db = await collection.findOne({user_id: ctx.from.id})
+        if(db.predmsg == 'null') return await ctx.reply('⚠️ Введите текст, а позже сможете прикрепить файлы: ')
+        if(db.predlojawaitforfiles == true) {
+            await collection.findOneAndUpdate({user_id: ctx.from.id}, {$push: {predlojfiles: {file_id: ctx.message.document.file_id, type: 'document'}}, $set: {predlojawaitforfiles: false}})
+            await ctx.reply('📩 Выберите действие:', {reply_markup: {inline_keyboard: [[Markup.button.callback('📩 Отправить', 'predlojsend')], [Markup.button.callback('🔴 Отменить', 'predlojcanc')]]}})
+        }
+    } catch (e) {
+        console.error(e);
+    }
+})
+
+predlojka.on('voice', async ctx => {
+    try {
+        const db = await collection.findOne({user_id: ctx.from.id})
+        if(db.predmsg == 'null') return await ctx.reply('⚠️ Введите текст, а позже сможете прикрепить файлы: ')
+        if(db.predlojawaitforfiles == true) {
+            await collection.findOneAndUpdate({user_id: ctx.from.id}, {$push: {predlojfiles: {file_id: ctx.message.voice.file_id, type: 'voice'}}, $set: {predlojawaitforfiles: false}})
+            await ctx.reply('📩 Выберите действие:', {reply_markup: {inline_keyboard: [[Markup.button.callback('📩 Отправить', 'predlojsend')], [Markup.button.callback('🔴 Отменить', 'predlojcanc')]]}})
+        }
+    } catch (e) {
+        console.error(e);
+    }
+})
+
+const predlojkasend = new Scenes.BaseScene("predlojkasend");
+
+predlojkasend.enter(async ctx => {
+    try {
+        const prid = await collection.findOne({_id: new ObjectId('646f07782ec51704c9ff90bd')})
+        const predid = prid.predlojids + 1
+        const db = await collection.findOne({user_id: ctx.from.id})
+        await collection.findOneAndUpdate({_id: new ObjectId('646f07782ec51704c9ff90bd')}, {$set: {predlojids: predid}})
+        if(db.predlojfiles.length == 0) {
+            await ctx.telegram.sendMessage(1031267639, `${predid}# | Новое сообщение с предложки:\n<i>${db.predmsg}</i>`, {reply_markup: {inline_keyboard: predloj_senderinfo}, parse_mode: "HTML"})
+        }else {
+            if(db.predlojfiles[0].type == 'photo') {
+                await ctx.tg.sendPhoto(1031267639, db.predlojfiles[0].file_id, {caption: `${predid}# | Новое сообщение с предложки:\n<i>${db.predmsg}</i>`, reply_markup: {inline_keyboard: predloj_senderinfo}, parse_mode: "HTML"})
+            }else if(db.predlojfiles[0].type == 'audio') {
+                await ctx.tg.sendAudio(1031267639, db.predlojfiles[0].file_id, {caption: `${predid}# | Новое сообщение с предложки:\n<i>${db.predmsg}</i>`, reply_markup: {inline_keyboard: predloj_senderinfo}, parse_mode: "HTML"})
+            }else if(db.predlojfiles[0].type == 'voice') {
+                await ctx.tg.sendVoice(1031267639, db.predlojfiles[0].file_id, {caption: `${predid}# | Новое сообщение с предложки:\n<i>${db.predmsg}</i>`, reply_markup: {inline_keyboard: predloj_senderinfo}, parse_mode: "HTML"})
+            }else {
+                await ctx.tg.sendDocument(1031267639, db.predlojfiles[0].file_id, {caption: `${predid}# | Новое сообщение с предложки:\n<i>${db.predmsg}</i>`, reply_markup: {inline_keyboard: predloj_senderinfo}, parse_mode: "HTML"})
+            }
+        }
+        await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {predsend: `${predid}`}})
+        await ctx.reply('Отправил ✅', {reply_markup: {inline_keyboard: [[Markup.button.callback('⏮ В меню', 'backtomnscenes')]]}})
+        await ctx.scene.leave('predlojkasend')
     } catch (e) {
         console.error(e);
     }
@@ -174,11 +248,51 @@ reklam_st2.on('document', async ctx => {
     }
 })
 
+reklam_st2.on('photo', async ctx => {
+    try {
+        const db = await collection.findOne({user_id: ctx.from.id})
+        if(db.waitingforfile == false) return
+        return await ctx.reply('⚠️ Извините, я принимаю только документ, отправьте файл без сжатия: ')
+    } catch (e) {
+        console.error(e);
+    }
+})
+
+reklam_st2.on('video', async ctx => {
+    try {
+        const db = await collection.findOne({user_id: ctx.from.id})
+        if(db.waitingforfile == false) return
+        return await ctx.reply('⚠️ Извините, я принимаю только документ, отправьте файл без сжатия: ')
+    } catch (e) {
+        console.error(e);
+    }
+})
+
+reklam_st2.on('audio', async ctx => {
+    try {
+        const db = await collection.findOne({user_id: ctx.from.id})
+        if(db.waitingforfile == false) return
+        return await ctx.reply('⚠️ Извините, я принимаю только документ, отправьте файл без сжатия: ')
+    } catch (e) {
+        console.error(e);
+    }
+})
+
+reklam_st2.on('voice', async ctx => {
+    try {
+        const db = await collection.findOne({user_id: ctx.from.id})
+        if(db.waitingforfile == false) return
+        return await ctx.reply('⚠️ Извините, я принимаю только документ, отправьте файл без сжатия: ')
+    } catch (e) {
+        console.error(e);
+    }
+})
+
 reklam_st2.action('addfile', async ctx => {
     try {
         await ctx.deleteMessage(ctx.callbackQuery.message.message_id)
         await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {waitingforfile: true}})
-        await ctx.reply('Скиньте файл без сжатия:')
+        await ctx.reply('Отправьте файл без сжатия:')
         await ctx.answerCbQuery()
     } catch (e) {
         console.error(e);
@@ -445,7 +559,7 @@ beatfold_spisscene.action('arendawav', async ctx => {
         console.error(e);
     }
 })
- 
+
 beatfold_spisscene.action('wptrackout', async ctx => {
     try {
         const db = await collection.findOne({user_id: ctx.from.id})
@@ -548,7 +662,39 @@ beatfold_beatscene_st2.on('audio', async ctx => {
         await ctx.reply('Добавил ✅')
         return await ctx.reply('Хотите добавить ещё?', {reply_markup: {inline_keyboard: [[Markup.button.callback('Добавить ➕', 'addbetfile')], [Markup.button.callback('Отправить анкенту 🟢', 'sendbeattz')]]}})
     }
+    await ctx.reply('Сначала опишите пожелания к биту, а потом сможете прикрепить файл:')
+})
+
+beatfold_beatscene_st2.on('photo', async ctx => {
+    const db = await collection.findOne({user_id: ctx.from.id})
+    if(db.waitforfilebeat == true) {
+        return ctx.reply('⚠️ Извините, я принимаю только аудиофайлы, отправьте аудиофайл:')
+    }
     await ctx.reply('С начало опишите пожелания к биту, а потом сможете прикрепить файл:')
+})
+
+beatfold_beatscene_st2.on('document', async ctx => {
+    const db = await collection.findOne({user_id: ctx.from.id})
+    if(db.waitforfilebeat == true) {
+        return ctx.reply('⚠️ Извините, я принимаю только аудиофайлы, отправьте аудиофайл:')
+    }
+    await ctx.reply('С начало опишите пожелания к биту, а потом сможете прикрепить файл:')
+})
+
+beatfold_beatscene_st2.on('video', async ctx => {
+    const db = await collection.findOne({user_id: ctx.from.id})
+    if(db.waitforfilebeat == true) {
+        return ctx.reply('⚠️ Извините, я принимаю только аудиофайлы, отправьте аудиофайл:')
+    }
+    await ctx.reply('С начало опишите пожелания к биту, а потом сможете прикрепить файл:')
+})
+
+beatfold_beatscene_st2.on('voice', async ctx => {
+    const db = await collection.findOne({user_id: ctx.from.id})
+    if(db.waitforfilebeat == true) {
+        return ctx.reply('⚠️ Извините, я принимаю только аудиофайлы, отправьте аудиофайл:')
+    }
+    await ctx.reply('С начало опишите пожелания к биту, а потом сможете прикрепить файлы:')
 })
 
 beatfold_beatscene_st2.on('text', async ctx => {
@@ -562,7 +708,7 @@ beatfold_beatscene_st2.on('text', async ctx => {
         }
         await ctx.reply('Вношу изменения в анкету 🔄️', {reply_markup: {remove_keyboard: true}})
         await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {beatscrtz: ctx.message.text}})
-        await ctx.reply('Хотите прикрепить файлы к вашей анкете?', {reply_markup: {inline_keyboard: [[Markup.button.callback('Добавить ➕', 'addbetfile')], [Markup.button.callback('Отправить анкенту 🟢', 'sendbeattz')]]}})
+        await ctx.reply('Хотите прикрепить аудиофайлы к вашей анкете?', {reply_markup: {inline_keyboard: [[Markup.button.callback('Добавить ➕', 'addbetfile')], [Markup.button.callback('Отправить анкенту 🟢', 'sendbeattz')]]}})
     } catch (e) {
         console.error(e);
     }
@@ -572,7 +718,7 @@ beatfold_beatscene_st2.action('addbetfile', async ctx => {
     try {
         await ctx.deleteMessage(ctx.callbackQuery.message.message_id)
         await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {waitforfilebeat: true}})
-        await ctx.reply('Скиньте файл:')
+        await ctx.reply('Отправьте аудиофайл:')
     } catch (e) {
         console.error(e);
     }
@@ -613,7 +759,7 @@ beatfold_beatscene_st2.action('sendbeattz', async ctx => {
     }
 })
  
-const stage = new Scenes.Stage([predlojka, pxtatansw, reklam, reklam_st2, reklam_st3, reklam_st4, reklam_st5, svedfold_scene, beatfold_spisscene, beatfold_beatscene, beatfold_beatscene_st2]);  
+const stage = new Scenes.Stage([predlojka, predlojkasend, pxtatansw, reklam, reklam_st2, reklam_st3, reklam_st4, reklam_st5, svedfold_scene, beatfold_spisscene, beatfold_beatscene, beatfold_beatscene_st2]);  
 bot.use(session());
 bot.use(stage.middleware());  
 
@@ -684,8 +830,14 @@ bot.action('idea', async ctx => {
 bot.action('predlojsender', async ctx => {
     try {
         if(ctx.scene.current != undefined) return await ctx.answerCbQuery() 
-        const usdb = await collection.findOne({predsend: ctx.callbackQuery.message.text.split(' ')[0].replace('#', '')})
-        await ctx.editMessageText(`${usdb.predsend}# | Данные отправителя:\n\n<b>USER ID:</b> <code>${usdb.user_id}</code>\n<b>USER NAME:</b> <code>${usdb.first_name}</code>\n<b>USER NAME:</b> ${usdb.user_name}`, {reply_markup: {inline_keyboard: predloj_senderonv}, parse_mode: "HTML"})
+        let usdb = 0
+        if(ctx.callbackQuery.message.text) {
+            usdb = await collection.findOne({predsend: ctx.callbackQuery.message.text.split(' ')[0].replace('#', '')})
+            await ctx.editMessageText(`${usdb.predsend}# | Данные отправителя:\n\n<b>USER ID:</b> <code>${usdb.user_id}</code>\n<b>USER NAME:</b> <code>${usdb.first_name}</code>\n<b>USER NAME:</b> ${usdb.user_name}`, {reply_markup: {inline_keyboard: predloj_senderonv}, parse_mode: "HTML"})
+        }else if(ctx.callbackQuery.message.caption) {
+            usdb = await collection.findOne({predsend: ctx.callbackQuery.message.caption.split(' ')[0].replace('#', '')})
+            await ctx.editMessageCaption(`${usdb.predsend}# | Данные отправителя:\n\n<b>USER ID:</b> <code>${usdb.user_id}</code>\n<b>USER NAME:</b> <code>${usdb.first_name}</code>\n<b>USER NAME:</b> ${usdb.user_name}`, {reply_markup: {inline_keyboard: predloj_senderonv}, parse_mode: "HTML"})
+        }
         await ctx.answerCbQuery('Вот его голова)', {show_alert: false})
     } catch (e) {
         console.error(e);
@@ -695,7 +847,12 @@ bot.action('predlojsender', async ctx => {
 bot.action('predlojacanc', async ctx => {
     try {
         if(ctx.scene.current != undefined) return await ctx.answerCbQuery() 
-        const db = await collection.findOneAndUpdate({predsend: ctx.callbackQuery.message.text.split(' ')[0].replace('#', '')}, {$set: {predsend: 'none'}})
+        let db = 0
+        if(ctx.callbackQuery.message.text) {
+            db = await collection.findOneAndUpdate({predsend: ctx.callbackQuery.message.text.split(' ')[0].replace('#', '')}, {$set: {predsend: 'none'}})
+        }else if(ctx.callbackQuery.message.caption) {
+            db = await collection.findOneAndUpdate({predsend: ctx.callbackQuery.message.caption.split(' ')[0].replace('#', '')}, {$set: {predsend: 'none'}})
+        }
         await ctx.deleteMessage(ctx.callbackQuery.message.message_id)
         await ctx.tg.sendMessage(db.value.user_id, '🟢 Предложка потаты снова доступна!')
         await ctx.answerCbQuery('Закрыто ✅', {show_alert: false})
@@ -707,8 +864,14 @@ bot.action('predlojacanc', async ctx => {
 bot.action('predlojsenderback', async ctx => {
     try {
         if(ctx.scene.current != undefined) return await ctx.answerCbQuery() 
-        const db = await collection.findOne({predsend: ctx.callbackQuery.message.text.split(' ')[0].replace('#', '')})
-        await ctx.editMessageText(`${db.predsend}# | Сообщение с предложки:\n<i>${db.predmsg}</i>`, {reply_markup: {inline_keyboard: predloj_senderinfo}, parse_mode: "HTML"})
+        let db = 0
+        if(ctx.callbackQuery.message.text) {
+            db = await collection.findOne({predsend: ctx.callbackQuery.message.text.split(' ')[0].replace('#', '')})
+            await ctx.editMessageText(`${db.predsend}# | Сообщение с предложки:\n<i>${db.predmsg}</i>`, {reply_markup: {inline_keyboard: predloj_senderinfo}, parse_mode: "HTML"})
+        }else if(ctx.callbackQuery.message.caption) {
+            db = await collection.findOne({predsend: ctx.callbackQuery.message.caption.split(' ')[0].replace('#', '')})
+            await ctx.editMessageCaption(`${db.predsend}# | Сообщение с предложки:\n<i>${db.predmsg}</i>`, {reply_markup: {inline_keyboard: predloj_senderinfo}, parse_mode: "HTML"})
+        }
         await ctx.answerCbQuery('Вернул ✅', {show_alert: false})
     } catch (e) {
         console.error(e);
@@ -718,7 +881,12 @@ bot.action('predlojsenderback', async ctx => {
 bot.action('predlojanswer', async ctx => {
     try {
         if(ctx.scene.current != undefined) return await ctx.answerCbQuery() 
-        const db = await collection.findOne({predsend: ctx.callbackQuery.message.text.split(' ')[0].replace('#', '')})
+        let db = 0
+        if(ctx.callbackQuery.message.text) {
+            db = await collection.findOne({predsend: ctx.callbackQuery.message.text.split(' ')[0].replace('#', '')})
+        }else if(ctx.callbackQuery.message.caption) {
+            db = await collection.findOne({predsend: ctx.callbackQuery.message.caption.split(' ')[0].replace('#', '')})
+        }
         await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {usertoansw: db.user_id}})
         await ctx.deleteMessage(ctx.callbackQuery.message.message_id)
         await ctx.scene.enter('pxtatansw')
@@ -979,15 +1147,49 @@ bot.action('fiveminutekit', async ctx => {
 
 bot.action('downkit', async ctx => {
     try {
+        // -1001974175255
         if(ctx.scene.current != undefined) return await ctx.answerCbQuery() 
         const db = await collection.findOne({user_id: ctx.from.id})
-        if(db.drumclicked == 'helper') {
-            await ctx.editMessageMedia({type: 'document', media: 'BQACAgIAAxkBAAIBSWRwqC1bZjPC1iOOnhUat14dfi9gAAJ1KwACoVh4S67CxK54c24sLwQ', caption: '✨ @pxtatxes! - HELPER {MIDI KIT}\n\nПороль от архива: pxtatxes'}, {reply_markup: {inline_keyboard: [[Markup.button.url('СКАЧАТЬ ЧЕРЕЗ GOOGLE DRIVE', 'https://drive.google.com/file/d/11O_Rzl9pg9sNv4pjk5ouqa2GFUJ0mG0N/view')]]}})
-        }else if(db.drumclicked == 'fminute') {
-            await ctx.editMessageMedia({type: 'document', media: 'BQACAgIAAxkBAAIBSmRwqDwxYvPP9nm2zWMyNX61q-U-AALKKwACoVh4S2lLPkYpkumxLwQ', caption: '✨ @pxtatxes! - "5 MINUTE" (Helper Pack)'}, {reply_markup: {inline_keyboard: [[Markup.button.url('СКАЧАТЬ ЧЕРЕЗ GOOGLE DRIVE', 'https://drive.google.com/file/d/1Egq7EM20mgdjTcILTVLLjXvrpbGmM1oH/view')]]}})
+        try {
+            const inchanel = await ctx.tg.getChatMember(-1001559267480, ctx.from.id)
+            console.log(inchanel);
+            if (inchanel.status != 'left') {
+                if (db.chanelsubcheck == true) {
+                    let current = Math.floor(Date.now() / 1000);
+                    let delta = current - db.hoursinchannel;
+                    const hoursPassed = Math.floor(delta / 3600);
+                    if (hoursPassed >= 24) {
+                        await ctx.answerCbQuery()
+                    }else {
+                        await ctx.answerCbQuery()
+                        return await ctx.reply(`🕛 Для получения доступа требуется быть подписанным на канал ещё <b>${24 - hoursPassed}</b> часов.`, {parse_mode: 'HTML'})
+                    }
+                }else {
+                    await ctx.answerCbQuery()
+                    await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {chanelsubcheck: true, hoursinchannel: Math.floor(Date.now() / 1000)}})
+                    return await ctx.reply(`🕛 Для получения доступа требуется быть подписанным на канал ещё <b>${24 - hoursPassed}</b> часов.`, {parse_mode: 'HTML'})
+                }
+            } else {
+                await ctx.answerCbQuery()
+                await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {chanelsubcheck: false}})
+                return await ctx.reply('📣 Для того чтобы скачать паки, вам нужно подписаться на канал <a href="https://t.me/pxtatxes">"PXTATXES"</a>', {parse_mode: 'HTML', disable_web_page_preview: true, reply_markup: {inline_keyboard: [[Markup.button.url('Открыть канал 🛢️', 'https://t.me/pxtatxes')]]}})
+            }
+        } catch (e) {
+            await ctx.answerCbQuery()
+            await collection.findOneAndUpdate({user_id: ctx.from.id}, {$set: {chanelsubcheck: false}})
+            return await ctx.reply('📣 Для того чтобы скачать паки, вам нужно подписаться на канал <a href="https://t.me/pxtatxes">"PXTATXES"</a>', {parse_mode: 'HTML', disable_web_page_preview: true, reply_markup: {inline_keyboard: [[Markup.button.url('Открыть канал 🛢️', 'https://t.me/pxtatxes')]]}})
         }
-        await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: 'Ваш драмкит ждет вас выше ⬆️\n\n📂 Выберите интересующий вас пак:', reply_markup: {inline_keyboard: vpacks}})
+        if(db.drumclicked == 'helper') {
+            await ctx.deleteMessage(ctx.callbackQuery.message.message_id)
+            await ctx.replyWithDocument('BQACAgIAAxkBAAIBSWRwqC1bZjPC1iOOnhUat14dfi9gAAJ1KwACoVh4S67CxK54c24sLwQ', {caption: '✨ @pxtatxes! - HELPER {MIDI KIT}\n\nПороль от архива: pxtatxes', reply_markup: {inline_keyboard: [[Markup.button.url('СКАЧАТЬ ЧЕРЕЗ GOOGLE DRIVE', 'https://drive.google.com/file/d/11O_Rzl9pg9sNv4pjk5ouqa2GFUJ0mG0N/view')]]}})
+        }else if(db.drumclicked == 'fminute') {
+            await ctx.deleteMessage(ctx.callbackQuery.message.message_id)
+            await ctx.replyWithDocument('BQACAgIAAxkBAAIBSmRwqDwxYvPP9nm2zWMyNX61q-U-AALKKwACoVh4S2lLPkYpkumxLwQ', {caption: '✨ @pxtatxes! - "5 MINUTE" (Helper Pack)', reply_markup: {inline_keyboard: [[Markup.button.url('СКАЧАТЬ ЧЕРЕЗ GOOGLE DRIVE', 'https://drive.google.com/file/d/1Egq7EM20mgdjTcILTVLLjXvrpbGmM1oH/view')]]}})
+        }
         await ctx.answerCbQuery()
+        setTimeout(async () => {
+            await ctx.replyWithPhoto('AgACAgIAAxkBAAIBQGRwpdUHgsO-VzXinFdsqtt53IflAAJcyzEb3-yIS8NvKBi2G2GKAQADAgADeAADLwQ', {caption: 'Ваш драмкит ждет вас выше ⬆️\n\n📂 Выберите интересующий вас пак:', reply_markup: {inline_keyboard: vpacks}}) 
+        }, 2000);    
     } catch (e) {
         console.error(e);
     }
@@ -1063,8 +1265,6 @@ bot.action('backtosvedfold', async ctx => {
         console.error(e);
     }
 })
-
-bot.on('forward_date', async ctx => console.log(ctx.message.photo.pop().file_id))
 
 
 
