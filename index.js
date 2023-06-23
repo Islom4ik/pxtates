@@ -1111,7 +1111,7 @@ const descr =
 bot.action('buykit', async ctx => {
     try {
         if(ctx.scene.current != undefined) return await ctx.answerCbQuery() 
-        await ctx.replyWithInvoice({currency: 'RUB', photo_size: 500, photo_height: 400, photo_width: 1000, photo_url: 'https://cdn.discordapp.com/attachments/992866546596712638/1117160834389512212/secret.jpg', prices: [{amount: 60000, label: '600.0'}], title: 'PXTATXES - SECRET DRUM KTI', provider_token: '381764678:TEST:59083', start_parameter: '1', description: descr, payload: ctx.from.id})
+        await ctx.replyWithInvoice({currency: 'RUB', photo_size: 500, photo_height: 400, photo_width: 1000, photo_url: 'https://cdn.discordapp.com/attachments/992866546596712638/1117160834389512212/secret.jpg', prices: [{amount: 60000, label: '600.0'}], title: 'PXTATXES - SECRET DRUM KIT', provider_token: '381764678:TEST:59083', start_parameter: '1', description: descr, payload: ctx.from.id})
     } catch (e) {
         console.error(e);
     }
