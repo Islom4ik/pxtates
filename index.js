@@ -1166,7 +1166,7 @@ bot.action('downkit', async ctx => {
         if(ctx.scene.current != undefined) return await ctx.answerCbQuery() 
         const db = await collection.findOne({user_id: ctx.from.id})
         try {
-            const inchanel = await ctx.tg.getChatMember(-1001559267480, ctx.from.id)
+            const inchanel = await ctx.tg.getChatMember(-1001974175255, ctx.from.id)
             console.log(inchanel);
             if (inchanel.status != 'left') {
                 if (db.chanelsubcheck == true) {
