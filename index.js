@@ -2,7 +2,7 @@ const { Scenes, session, Telegraf, Markup } = require('telegraf');
 require('dotenv').config();
 const bot = new Telegraf(process.env.BOT_TOKEN);
 module.exports = {Markup}
-const { main_keyboards, predloj_keyboards, predloj_senderinfo, predloj_senderonv, links, dlinks, vpacks, bpacks, pxtpacks, bpxtpacks, reklam_keyboards, uslugi_keyboards, uslug_svedm_keyboards, uslug_beats_keyboards, lisenziya } = require('./additions/markups.js')  
+const { main_keyboards, predloj_keyboards, predloj_senderinfo, predloj_senderonv, links, dlinks, vpacks, bpacks, pxtpacks, bpxtpacks, reklam_keyboards, uslugi_keyboards, uslug_svedm_keyboards, uslug_beats_keyboards, lisenziya } = require('./additions/markups.js') 
 const { beatsinfo, svedinfo } = require('./additions/extra.js')
 const { collection, ObjectId } = require('./additions/db');
 // bot.telegram.setWebhook('https://zade-production.up.railway.app', {max_connections: 50});
@@ -1103,14 +1103,29 @@ bot.action('vkreklam', async ctx => {
     }
 })
 
+const descr = 
+`
+В этом драм ките собрано множество самых интересных и качественных звуков, которые я ежедневно использую при написании своих работ, а также использую в роликах на канале
+`
+
 bot.action('buykit', async ctx => {
     try {
         if(ctx.scene.current != undefined) return await ctx.answerCbQuery() 
-        await ctx.answerCbQuery('Купил типо')
+        await ctx.replyWithInvoice({currency: 'RUB', photo_size: 500, photo_height: 400, photo_width: 1000, photo_url: 'https://cdn.discordapp.com/attachments/992866546596712638/1117160834389512212/secret.jpg', prices: [{amount: 60000, label: '600.0'}], title: 'PXTATXES - SECRET DRUM KTI', provider_token: '381764678:TEST:59083', start_parameter: '1', description: descr, payload: ctx.from.id})
     } catch (e) {
         console.error(e);
     }
 })
+
+bot.on('pre_checkout_query', async ctx => {
+    await ctx.answerPreCheckoutQuery(true);
+});
+
+bot.on('successful_payment', async (ctx) => {
+    const paymentInfo = ctx.message.successful_payment;
+    await ctx.reply('Спасибо за оплату!\n\nВот ваш драмкит:', {reply_markup: {inline_keyboard: [[Markup.button.callback('⏮ В меню', 'backtomnscenes')]]}})
+});
+
 
 bot.action('secretdkit', async ctx => {
     try {
